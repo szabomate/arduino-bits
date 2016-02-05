@@ -1,0 +1,62 @@
+#include <EEPROM.h>
+// sync input... external switch or clock signal (0-5V)
+const int syncIn=10;
+
+// da ledz to chase...
+const int bit0=2;
+const int bit1=3;
+const int bit2=4;
+const int bit3=5;
+const int bit4=6;
+const int bit5=7;
+const int bit6=8;
+const int bit7=9;
+
+// EEPROM memory addresses...
+const int lastStep=0;
+const int lastSync=1;
+
+
+
+void setup()
+{
+  // LED outputs
+  pinMode(bit0,OUTPUT);
+  pinMode(bit1,OUTPUT);
+  pinMode(bit2,OUTPUT);
+  pinMode(bit3,OUTPUT);
+  pinMode(bit4,OUTPUT);
+  pinMode(bit5,OUTPUT);
+  pinMode(bit6,OUTPUT);
+  pinMode(bit7,OUTPUT);
+}
+
+
+
+void loop ()
+{ 
+
+  // reset steps to 0, if...
+  int reset=7;
+  if (EEPROM.read(lastStep)>reset){EEPROM.write(lastStep,0);}
+
+  // scan sync input
+  int mennivagymaradni;
+  if (digitalRead(syncIn)==1){mennivagymaradni=0;}
+  if (digitalRead(syncIn)==0){mennivagymaradni=1;}
+
+  int currentStep;
+
+  // decide to increase current step, or leave it as is...
+  if (EEPROM.read(lastSync)==1){currentStep=EEPROM.read(lastStep);}    // if no new pulse on sync input › don't change current step
+  if (EEPROM.read(lastSync)==0){currentStep=EEPROM.read(lastStep)+mennivagymaradni;}  // if new pulse on sync input › increase current step by 1
+
+  //update LEDS
+  for (int steps=0;steps<8;steps++)
+  {if (currentStep==steps){digitalWrite(steps+2,1);}else{digitalWrite(steps+2,0);}}
+
+  // hello éprom!
+  EEPROM.update(lastStep,currentStep); // update lastStep if it changed
+  EEPROM.update(lastSync,mennivagymaradni);   // update lastSync if it's back to 0, and we can wait for the next
+  
+}
